@@ -1,0 +1,115 @@
+---
+title: "Practical Machine Learning"
+author: "Maya Ivanova"
+date: "July 2nd,  2017"
+output: html_document
+---
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self-movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. "Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13)". Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Special thanks to the above mentioned authors for being so generous in allowing their data to be used for this kind of assignment.
+
+## Data loading 
+
+```{r, message=FALSE, warning=FALSE}
+rm(list=ls()) 
+
+library(knitr)
+library(caret)
+library(rpart)
+library(randomForest)
+library(tree)
+```
+
+```{r}
+#download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile = "./pml-training.csv")
+#download.file("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile = "./pml-testing.csv")
+#setwd("C:/Users/maech/OneDrive/Documents/Courseera/Practical Machine Learning/Week 4/Assignment")
+trainingOrig = read.csv("pml-training.csv", na.strings=c("", "NA", "NULL"))
+testingOrig = read.csv("pml-testing.csv", na.strings=c("", "NA", "NULL"))
+dim(trainingOrig)
+```
+## Data Preparation
+
+```{r, echo=TRUE}
+# remove columns with NA
+training.delna <- trainingOrig[ , colSums(is.na(trainingOrig)) == 0]
+#head(training1)
+#training3 <- training.decor[ rowSums(is.na(training.decor)) == 0, ]
+dim(training.delna)
+```
+
+```{r}
+
+# split the data into training and test sets
+inTrain <- createDataPartition(training.delna$classe, p=0.7, list=F)
+training <- training.delna[inTrain,]
+testing <- training.delna[-inTrain,]
+dim(training)
+dim(testing)
+```
+
+````{r}
+
+```
+
+```{r, include=FALSE}
+# check for zero variance
+zero.var = nearZeroVar(training, saveMetrics=TRUE)
+zero.var
+```
+
+```{r}
+# remove identification only variables (columns 1 to 7) 
+training <- training[, -(1:7)]
+testing  <- testing[, -(1:7)]
+dim(training)
+```
+
+## Analysis: Decision Tree Classification
+```{r}
+
+#model fit
+set.seed(12345)
+tree.training=tree(classe~.,data=training)
+summary(tree.training)
+```
+Our Decision Tree model shows misclassification error rate of  0.34 for the training data. Now we will predict it for out-of sample accuracy.
+```{r}
+#Cross-validation
+tree.pred=predict(tree.training,testing,type="class")
+confMatDecTree <- confusionMatrix(tree.pred, testing$classe)
+confMatDecTree
+```
+Overall accuracy is unacceptably low (66%), indicating that decision tree classification is not appropriate to predict this outcome.
+
+## Analysis: Random Forest Classification
+```{r}
+rf.training=randomForest(classe~.,data=training,ntree=100, importance=TRUE)
+rf.training
+```
+Our Random Forest model shows OOB estimate of error rate 0.6% for the training data. Now we will predict it for out-of sample accuracy.
+
+```{r}
+tree.pred=predict(rf.training,testing,type="class")
+confMatRF <- confusionMatrix(tree.pred, testing$classe)
+confMatRF
+```
+Model accuracy is high (99%), indicating that random forests classification is likely to be appropriate to predict this outcome.
+```{r}
+#Which variables are most important in this model?
+
+varImpPlot(rf.training)
+```
+
+
+## Conclusion
+Now we can predict the testing data from the website.
+```{r, include=FALSE}
+test <- predict(rf.training, testingOrig)
+test
+```
