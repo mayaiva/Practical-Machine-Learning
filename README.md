@@ -1,2 +1,2 @@
 # Practical-Machine-Learning
-Please use https://mayaiva.github.io/Practical-Machine-Learning/ to view results.
+Please use [Following link](https://mayaiva.github.io/Practical-Machine-Learning/) to review the assignment results.
