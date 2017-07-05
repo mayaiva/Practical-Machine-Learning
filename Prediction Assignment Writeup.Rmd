@@ -44,7 +44,6 @@ dim(training.delna)
 ```
 
 ```{r}
-
 # split the data into training and test sets
 inTrain <- createDataPartition(training.delna$classe, p=0.7, list=F)
 training <- training.delna[inTrain,]
@@ -53,11 +52,7 @@ dim(training)
 dim(testing)
 ```
 
-````{r}
-
-```
-
-```{r, include=FALSE}
+```{r}
 # check for zero variance
 zero.var = nearZeroVar(training, saveMetrics=TRUE)
 zero.var
@@ -71,8 +66,8 @@ dim(training)
 ```
 
 ## Analysis: Decision Tree Classification
-```{r}
 
+```{r}
 #model fit
 set.seed(12345)
 tree.training=tree(classe~.,data=training)
